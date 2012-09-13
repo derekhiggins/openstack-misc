@@ -1,0 +1,57 @@
+#!/usr/bin/python
+# Adds user/tenant/role in one
+import os, prettytable, sys
+import getpass
+
+from keystoneclient.v2_0 import client
+from keystoneclient import utils
+
+keystone = client.Client(username=os.environ['OS_USERNAME'], password=os.environ['OS_PASSWORD'], 
+                         tenant_name=os.environ['OS_TENANT_NAME'], auth_url=os.environ['OS_AUTH_URL'])
+
+user = tenant = role = password = None
+username = tenantname = None
+rolename = "Member"
+email = ""
+if "-u" in sys.argv: username = sys.argv[sys.argv.index("-u")+1]
+if "-t" in sys.argv: tenantname = sys.argv[sys.argv.index("-t")+1]
+if "-p" in sys.argv: password = sys.argv[sys.argv.index("-p")+1]
+if "-r" in sys.argv: role = sys.argv[sys.argv.index("-r")+1]
+if "-e" in sys.argv: email = sys.argv[sys.argv.index("-e")+1]
+
+
+if username:
+    for user in keystone.users.list():
+        if user.name == username:
+            break
+    else:
+        if not password: 
+            print "Give me a password"
+            while 1:
+                pw = getpass.getpass("password :")
+                pw2 = getpass.getpass("again   :")
+                if pw == pw2:
+                    password = pw
+                    break
+        print "Creating user ",username
+        user = keystone.users.create(username, password, email)
+
+if tenantname:
+    for tenant in keystone.tenants.list():
+        if tenant.name == tenantname:
+            break
+    else:
+        print "Creating tanant",tenantname
+        tenant = keystone.tenants.create(tenantname)
+
+if rolename:
+    for role in keystone.roles.list():
+        if role.name == rolename:
+            break
+    else:
+        print "Creating role ",rolename
+        role = keystone.roles.create(rolename)
+
+if user and tenant and role:
+    print "Adding user,role and tenant"
+    keystone.roles.add_user_role(user, role, tenant)
