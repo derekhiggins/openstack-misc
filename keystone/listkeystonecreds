@@ -14,6 +14,8 @@ if "-t" in sys.argv: f_tenant = sys.argv[sys.argv.index("-t")+1]
 tenants = [t for t in keystone.tenants.list() if f_tenant in t.name]
 users =   [u for u in keystone.users.list() if f_user in u.name]
 
+tenants.sort(lambda a,b:cmp(a.name,b.name))
+
 pt = prettytable.PrettyTable(["name"]+[t.name for t in tenants])
 for user in users:
     row = [user.name]
